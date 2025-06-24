@@ -1,0 +1,220 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title id="pageTitle">Live Match</title>
+
+  <style>
+    html, body {
+      margin: 0;
+      padding: 0;
+      height: 100%;
+      background-color: black;
+      font-family: Arial, sans-serif;
+    }
+
+    #videoContainer {
+      width: 100vw;
+      height: 100vh;
+      position: relative;
+      overflow: hidden;
+    }
+
+    video {
+      width: 100%;
+      height: 100%;
+      object-fit: contain; /* prevent zoom-in */
+      background: black;
+    }
+
+    #loadingScreen {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100vw;
+      height: 100vh;
+      background-color: black;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      z-index: 999;
+      color: white;
+      font-size: 18px;
+    }
+
+    #spinner {
+      border: 5px solid #f3f3f3;
+      border-top: 5px solid #00acee;
+      border-radius: 50%;
+      width: 40px;
+      height: 40px;
+      animation: spin 1s linear infinite;
+      margin-right: 12px;
+    }
+
+    @keyframes spin {
+      0% { transform: rotate(0deg); }
+      100% { transform: rotate(360deg); }
+    }
+
+    /* Stylish Telegram Popup */
+    .popup {
+      position: fixed;
+      top: 0;
+      left: 0;
+      height: 100vh;
+      width: 100vw;
+      backdrop-filter: blur(8px);
+      background-color: rgba(0, 0, 0, 0.6);
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      z-index: 1000;
+    }
+
+    .popup-content {
+      background: rgba(30, 30, 30, 0.8);
+      padding: 40px;
+      border-radius: 20px;
+      box-shadow: 0 8px 32px rgba(0, 0, 0, 0.5);
+      border: 2px solid rgba(255, 255, 255, 0.18);
+      text-align: center;
+      max-width: 90%;
+      color: white;
+      font-family: 'Segoe UI', sans-serif;
+      animation: glow 3s infinite alternate;
+    }
+
+    @keyframes glow {
+      0% {
+        box-shadow: 0 0 10px #00acee, 0 0 20px #00acee, 0 0 30px #00acee;
+      }
+      100% {
+        box-shadow: 0 0 20px #00acee, 0 0 40px #00acee, 0 0 60px #00acee;
+      }
+    }
+
+    .popup-content h2 {
+      font-size: 28px;
+      margin-bottom: 15px;
+    }
+
+    .popup-content p {
+      font-size: 18px;
+      margin-bottom: 30px;
+    }
+
+    .join-button {
+      display: inline-block;
+      padding: 15px 30px;
+      font-size: 18px;
+      font-weight: bold;
+      color: white;
+      background: linear-gradient(45deg, #00acee, #007bff);
+      border: none;
+      border-radius: 50px;
+      text-decoration: none;
+      box-shadow: 0 4px 15px rgba(0, 172, 238, 0.5);
+      transition: all 0.3s ease;
+    }
+
+    .join-button:hover {
+      transform: scale(1.1);
+      box-shadow: 0 6px 25px rgba(0, 172, 238, 0.7);
+    }
+
+    .continue-button {
+      margin-top: 20px;
+      padding: 12px 25px;
+      font-size: 16px;
+      border: none;
+      border-radius: 50px;
+      background-color: #444;
+      color: white;
+      cursor: pointer;
+      transition: 0.3s ease;
+    }
+
+    .continue-button:hover {
+      background-color: #00acee;
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Loading screen -->
+  <div id="loadingScreen">
+    <div id="spinner"></div>
+    <span>Loading stream...</span>
+  </div>
+
+  <!-- Video container -->
+  <div id="videoContainer">
+    <video id="video" controls autoplay playsinline></video>
+  </div>
+
+  <!-- Stylish Telegram popup -->
+  <div class="popup" id="telegramPopup">
+    <div class="popup-content">
+      <h2>🔥 Join Our Telegram Channel 🔥</h2>
+      <p>Get instant match updates & live links directly on Telegram!</p>
+      <a href="https://t.me/+d7CNWHbkvDQxYjE9" target="_blank" class="join-button">👉 Join Now</a><br>
+      <button onclick="closePopup()" class="continue-button">Already joined</button>
+    </div>
+  </div>
+
+  <!-- HLS.js -->
+  <script src="https://cdn.jsdelivr.net/npm/hls.js@latest"></script>
+
+  <script>
+    const video = document.getElementById('video');
+    const streamUrl = "https://media.onestream.studio/content/hls/live/live_4139402_lydwgp8mf/hls.m3u8";
+
+    if (Hls.isSupported()) {
+      const hls = new Hls();
+      hls.loadSource(streamUrl);
+      hls.attachMedia(video);
+      hls.on(Hls.Events.MANIFEST_PARSED, function () {
+        video.play();
+        document.getElementById("loadingScreen").style.display = "none";
+        requestFullScreen();
+      });
+    } else if (video.canPlayType('application/vnd.apple.mpegurl')) {
+      video.src = streamUrl;
+      video.addEventListener('loadedmetadata', function () {
+        video.play();
+        document.getElementById("loadingScreen").style.display = "none";
+        requestFullScreen();
+      });
+    } else {
+      alert("HLS is not supported in this browser.");
+    }
+
+    function closePopup() {
+      document.getElementById('telegramPopup').style.display = 'none';
+    }
+
+    window.onload = () => {
+      document.getElementById('telegramPopup').style.display = 'flex';
+    };
+
+    setInterval(() => {
+      document.title = "Live Match - " + new Date().toLocaleTimeString();
+    }, 10000);
+
+    function requestFullScreen() {
+      const container = document.getElementById("videoContainer");
+      if (container.requestFullscreen) {
+        container.requestFullscreen();
+      } else if (container.webkitRequestFullscreen) {
+        container.webkitRequestFullscreen();
+      } else if (container.mozRequestFullScreen) {
+        container.mozRequestFullScreen();
+      } else if (container.msRequestFullscreen) {
+        container.msRequestFullscreen();
+      }
+    }
+  </script>
+</body>
+</html>
